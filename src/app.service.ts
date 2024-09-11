@@ -29,15 +29,19 @@ export class AppService {
     }
   }
 
-  async getPerformance(startDate: string, endDate: string) {
-    const tasks = await this.fetchTasksByDateRange(startDate, endDate);
+  async getPerformance(body) {
+    const tasks = await this.fetchTasksByDateRange(
+      body?.startDate,
+      body?.endDate,
+    );
 
     const result = await this.calculateTasks(tasks?.issues);
 
     await this.updateGoogleSheet(
-      '1s0N-p0hqkYuh2i4m6TE2tsjnNDQ2YzKVOFKo-xVKwXA',
+      body?.sheetId,
       'Date',
       result,
+      body?.sheetName,
     );
     return result;
   }
@@ -105,7 +109,12 @@ export class AppService {
     return tasksByDate;
   }
 
-  async updateGoogleSheet(sheetId: string, fieldName: string, taskCounts: any) {
+  async updateGoogleSheet(
+    sheetId: string,
+    fieldName: string,
+    taskCounts: any,
+    sheetName: string,
+  ) {
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -120,7 +129,7 @@ export class AppService {
 
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId: sheetId,
-        range: 'June 2024',
+        range: sheetName,
       });
 
       const rows = response.data.values;
@@ -171,7 +180,7 @@ export class AppService {
           const lastColumn = String.fromCharCode(65 + updatedRow.length - 1);
 
           updates.push({
-            range: `June 2024!A${i + 1}:${lastColumn}${i + 1}`,
+            range: `${sheetName}!A${i + 1}:${lastColumn}${i + 1}`,
             values: [updatedRow.slice(0, updatedRow.length)],
           });
         }
@@ -197,6 +206,7 @@ export class AppService {
         'Error accessing or updating the Google Sheets API:',
         error,
       );
+      throw new Error(error?.message);
     }
   }
 }

@@ -1,12 +1,12 @@
-import { Body, Controller, Get } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
+  @Post('performance-evaluate')
   async getHello(@Body() body) {
-    return this.appService.getPerformance(body?.startDate, body?.endDate);
+    return this.appService.getPerformance(body);
   }
 }
